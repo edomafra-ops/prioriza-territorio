@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<body>
+<button onclick="cargar()">Cargar ejemplo</button>
+<script>
+const API = "/api/resultados";
+const ejemplo = {
+  sitio:"Ejemplo",
+  fecha:"2026-03-26",
+  tipo_atractivo:"Natural",
+  comunidad:"Demo",
+  coordenadas:{lat:14.9,lon:-91.4},
+  promedio_evaluacion:3.5,
+  nivel_preliminar:"Medio"
+};
+
+async function cargar(){
+  await fetch(API,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(ejemplo)
+  });
+  alert("Enviado");
+}
+</script>
+</body>
+</html>
