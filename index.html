@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prioriza Territorio - Dashboard</title>
+  <title>Evaluación de Sitios Turísticos - Informe de Comisión</title>
 
   <link
     rel="stylesheet"
@@ -33,9 +33,9 @@
     }
 
     .container {
-      max-width: 1280px;
+      max-width: 1360px;
       margin: 24px auto;
-      padding: 0 16px 24px;
+      padding: 0 16px 30px;
     }
 
     .header {
@@ -47,8 +47,8 @@
     }
 
     .header h1 {
-      margin: 0 0 6px 0;
-      font-size: 32px;
+      margin: 0 0 8px 0;
+      font-size: 30px;
     }
 
     .header p {
@@ -56,6 +56,20 @@
       opacity: 0.96;
       line-height: 1.5;
       font-size: 15px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel h3 {
+      margin: 0 0 14px 0;
+      color: var(--primary);
+      font-size: 22px;
     }
 
     .actions {
@@ -80,6 +94,30 @@
       background: #eef2f6;
       color: var(--text);
       border: 1px solid var(--border);
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+
+    .filter-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #4d5b63;
+    }
+
+    .filter-group select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: #fff;
     }
 
     .status {
@@ -118,22 +156,9 @@
 
     .grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
+      grid-template-columns: 1.15fr 1fr;
       gap: 18px;
       margin-bottom: 18px;
-    }
-
-    .panel {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-    }
-
-    .panel h3 {
-      margin: 0 0 14px 0;
-      color: var(--primary);
-      font-size: 22px;
     }
 
     #mapa {
@@ -165,7 +190,7 @@
       border-radius: 12px;
       padding: 12px 14px;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.55;
       margin-bottom: 18px;
     }
 
@@ -177,7 +202,7 @@
 
     .bar-item {
       display: grid;
-      grid-template-columns: 190px 1fr 70px;
+      grid-template-columns: 220px 1fr 70px;
       gap: 10px;
       align-items: center;
     }
@@ -196,26 +221,34 @@
       border-radius: 999px;
     }
 
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      background: var(--card);
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid var(--border);
+      min-width: 760px;
     }
 
     th, td {
       border-bottom: 1px solid var(--border);
-      padding: 12px 10px;
+      padding: 10px 10px;
       text-align: center;
-      font-size: 14px;
+      font-size: 13px;
+      vertical-align: middle;
     }
 
     th {
       background: #f0f4f8;
       color: var(--primary);
       font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
 
     td:first-child, th:first-child {
@@ -236,18 +269,25 @@
     }
 
     .tag-alto {
-      background: #dff0d8;
+      background: var(--good);
       color: #155724;
     }
 
     .tag-medio {
-      background: #fff3cd;
+      background: var(--mid);
       color: #856404;
     }
 
     .tag-bajo {
-      background: #f8d7da;
+      background: var(--bad);
       color: #721c24;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #69757d;
+      margin-top: 8px;
+      line-height: 1.5;
     }
 
     .error {
@@ -255,11 +295,12 @@
       font-weight: 700;
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 1100px) {
       .metrics { grid-template-columns: 1fr 1fr; }
       .grid { grid-template-columns: 1fr; }
+      .filters { grid-template-columns: 1fr; }
       .bar-item { grid-template-columns: 1fr; }
-      #mapa { height: 340px; }
+      #mapa { height: 360px; }
     }
 
     @media (max-width: 640px) {
@@ -269,14 +310,48 @@
 </head>
 <body>
   <div class="container">
+
     <div class="header">
-      <h1>Prioriza Territorio</h1>
-      <p>Herramienta de inteligencia territorial para priorización de inversiones públicas</p>
+      <h1>Evaluación de Sitios Turísticos</h1>
+      <p>
+        Informe técnico de comisión de campo – San Cristóbal Totonicapán y Totonicapán.<br>
+        Integración de resultados de evaluación turística y condiciones socioeconómicas de comunidades vinculadas.
+      </p>
     </div>
 
-    <div class="actions">
-      <button onclick="cargarDashboard()">Cargar dashboard</button>
-      <button class="secondary" onclick="window.location.reload()">Actualizar</button>
+    <div class="panel">
+      <h3>Segmentación de consulta</h3>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label for="filtroComunidad">Comunidad</label>
+          <select id="filtroComunidad">
+            <option value="">Todas las comunidades</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filtroSitio">Sitio turístico</label>
+          <select id="filtroSitio">
+            <option value="">Todos los sitios</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filtroNivel">Nivel de prioridad</label>
+          <select id="filtroNivel">
+            <option value="">Todos los niveles</option>
+            <option value="Alto">Alto</option>
+            <option value="Medio">Medio</option>
+            <option value="Bajo">Bajo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button onclick="cargarDashboard()">Aplicar filtros</button>
+        <button class="secondary" onclick="limpiarFiltros()">Limpiar filtros</button>
+      </div>
     </div>
 
     <div class="status">
@@ -296,28 +371,137 @@
         <div class="kpis" id="resumenEjecutivo"></div>
 
         <h3 style="margin-top:18px;">Promedio por sitio</h3>
-        <h3 style="margin-top:18px;">Recomendación estratégica</h3>
-        <p id="recomendacion" class="mensaje-box"></p>       
         <div class="bar-list" id="barrasSitios"></div>
+
+        <h3 style="margin-top:18px;">Recomendación técnica</h3>
+        <div id="recomendacion" class="mensaje-box"></div>
       </div>
     </div>
 
-    <div class="panel" style="margin-bottom:18px;">
+    <div class="panel">
       <h3>Puntajes por criterio</h3>
       <div class="bar-list" id="barrasCriterios"></div>
+      <div class="note">
+        Los promedios por criterio se calculan con base en los sitios actualmente visibles según la segmentación aplicada.
+      </div>
     </div>
 
     <div class="panel">
-      <h3>Ranking territorial</h3>
-      <div id="tablaWrap"></div>
+      <h3>Ranking territorial de sitios evaluados</h3>
+      <div class="table-wrap" id="tablaWrap"></div>
     </div>
+
+    <div class="panel">
+      <h3>Tabla socioeconómica por comunidad (NBI y pobreza)</h3>
+      <div class="table-wrap" id="tablaNBIWrap"></div>
+      <div class="note">
+        Fuente: tabla socioeconómica proporcionada para la comisión. Los valores se muestran por comunidad asociada a cada sitio turístico.
+      </div>
+    </div>
+
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const API = "/api/resultados";
+
+    // Tabla NBI integrada desde el Excel compartido
+    const NBI_DATA = [
+      {
+        sitio_key: "mirador_vivero_forestal",
+        sitio_nombre: "Mirador vivero forestal",
+        departamento: "Totonicapán",
+        municipio: "Totonicapán",
+        codigo_lugar: 801025,
+        comunidad: "Chuipachec",
+        hogares: 112,
+        personas: 562,
+        nbi_calidad_vivienda: 51.8,
+        nbi_hacinamiento: 25.9,
+        nbi_agua: 0.0,
+        nbi_drenajes: 92.9,
+        nbi_escolar: 1.8,
+        nbi_precariedad: 8.0,
+        pobreza_general_pct: 93.8,
+        pobreza_extrema_pct: 59.8,
+        hogares_pobreza_general: 105,
+        hogares_pobreza_extrema: 67
+      },
+      {
+        sitio_key: "cataratas_san_francisco",
+        sitio_nombre: "Cataratas de San Francisco",
+        departamento: "Totonicapán",
+        municipio: "San Cristóbal Totonicapán",
+        codigo_lugar: 802010,
+        comunidad: "Paxquecnil",
+        hogares: 109,
+        personas: 476,
+        nbi_calidad_vivienda: 0.9,
+        nbi_hacinamiento: 17.4,
+        nbi_agua: 6.4,
+        nbi_drenajes: 4.6,
+        nbi_escolar: 2.8,
+        nbi_precariedad: 5.5,
+        pobreza_general_pct: 27.5,
+        pobreza_extrema_pct: 9.2,
+        hogares_pobreza_general: 30,
+        hogares_pobreza_extrema: 10
+      },
+      {
+        sitio_key: "banos_agua_tibia",
+        sitio_nombre: "Baños de agua tibia",
+        departamento: "Totonicapán",
+        municipio: "San Cristóbal Totonicapán",
+        codigo_lugar: 802012,
+        comunidad: "Xecanchavox",
+        hogares: 659,
+        personas: 3121,
+        nbi_calidad_vivienda: 0.8,
+        nbi_hacinamiento: 19.4,
+        nbi_agua: 12.9,
+        nbi_drenajes: 0.3,
+        nbi_escolar: 0.5,
+        nbi_precariedad: 3.3,
+        pobreza_general_pct: 32.6,
+        pobreza_extrema_pct: 4.3,
+        hogares_pobreza_general: 215,
+        hogares_pobreza_extrema: 28
+      },
+      {
+        sitio_key: "cataratas_san_francisco",
+        sitio_nombre: "Cataratas de San Francisco",
+        departamento: "Totonicapán",
+        municipio: "San Francisco el Alto",
+        codigo_lugar: 803018,
+        comunidad: "Xeabaj",
+        hogares: 12,
+        personas: 65,
+        nbi_calidad_vivienda: 8.3,
+        nbi_hacinamiento: 8.3,
+        nbi_agua: 0.0,
+        nbi_drenajes: 0.0,
+        nbi_escolar: 8.3,
+        nbi_precariedad: 25.0,
+        pobreza_general_pct: 33.3,
+        pobreza_extrema_pct: 16.7,
+        hogares_pobreza_general: 4,
+        hogares_pobreza_extrema: 2
+      }
+    ];
+
     let mapa = null;
     let capaMarcadores = null;
+    let cacheRegistros = [];
+
+    function normalizarTexto(texto) {
+      return String(texto || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\//g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
 
     function clasificar(promedio) {
       if (promedio >= 4) return "Alto";
@@ -345,6 +529,79 @@
       if (n === "alto") return "#2ecc71";
       if (n === "medio") return "#f1c40f";
       return "#e74c3c";
+    }
+
+    function siteKeyFromName(nombre) {
+      const n = normalizarTexto(nombre);
+      if (n.includes("mirador vivero forestal")) return "mirador_vivero_forestal";
+      if (n.includes("banos de agua tibia")) return "banos_agua_tibia";
+      if (n.includes("cataratas de san francisco")) return "cataratas_san_francisco";
+      return n.replace(/\s+/g, "_");
+    }
+
+    function poblarFiltros(registros) {
+      const filtroComunidad = document.getElementById("filtroComunidad");
+      const filtroSitio = document.getElementById("filtroSitio");
+
+      const comunidades = Array.from(new Set(NBI_DATA.map(d => d.comunidad))).sort();
+      const sitios = Array.from(new Set(registros.map(r => r.sitio))).sort();
+
+      filtroComunidad.innerHTML = `<option value="">Todas las comunidades</option>` +
+        comunidades.map(c => `<option value="${c}">${c}</option>`).join("");
+
+      filtroSitio.innerHTML = `<option value="">Todos los sitios</option>` +
+        sitios.map(s => `<option value="${s}">${s}</option>`).join("");
+    }
+
+    function aplicarFiltros(registros) {
+      const comunidad = document.getElementById("filtroComunidad").value;
+      const sitio = document.getElementById("filtroSitio").value;
+      const nivel = document.getElementById("filtroNivel").value;
+
+      let filtrados = [...registros];
+
+      if (sitio) {
+        filtrados = filtrados.filter(r => r.sitio === sitio);
+      }
+
+      if (nivel) {
+        filtrados = filtrados.filter(r => r.nivel === nivel);
+      }
+
+      if (comunidad) {
+        const keysValidas = new Set(
+          NBI_DATA
+            .filter(d => d.comunidad === comunidad)
+            .map(d => d.sitio_key)
+        );
+
+        filtrados = filtrados.filter(r => keysValidas.has(r.site_key));
+      }
+
+      return filtrados;
+    }
+
+    function filtrarNBI(registrosFiltrados) {
+      const comunidad = document.getElementById("filtroComunidad").value;
+      const sitio = document.getElementById("filtroSitio").value;
+
+      let nbi = [...NBI_DATA];
+
+      if (comunidad) {
+        nbi = nbi.filter(d => d.comunidad === comunidad);
+      }
+
+      if (sitio) {
+        const key = siteKeyFromName(sitio);
+        nbi = nbi.filter(d => d.sitio_key === key);
+      }
+
+      if (!comunidad && !sitio) {
+        const keys = new Set(registrosFiltrados.map(r => r.site_key));
+        nbi = nbi.filter(d => keys.has(d.sitio_key));
+      }
+
+      return nbi;
     }
 
     function initMapa() {
@@ -385,6 +642,8 @@
 
       if (bounds.length) {
         mapa.fitBounds(bounds, { padding: [30, 30] });
+      } else {
+        mapa.setView([14.92, -91.40], 10);
       }
 
       setTimeout(() => mapa.invalidateSize(), 200);
@@ -421,7 +680,7 @@
         <div class="pill">Mejor evaluado: <strong>${mejor}</strong></div>
         <div class="pill">Menor puntaje: <strong>${peor}</strong></div>
         <div class="pill">Índice de viabilidad: <strong>${viabilidadProm}</strong></div>
-        <div class="pill">Registros cargados: <strong>${registros.length}</strong></div>
+        <div class="pill">Registros visibles: <strong>${registros.length}</strong></div>
       `;
     }
 
@@ -438,7 +697,7 @@
         `;
       }).join("");
 
-      document.getElementById("barrasSitios").innerHTML = html || "<div>Sin datos.</div>";
+      document.getElementById("barrasSitios").innerHTML = html || "<div>Sin datos visibles.</div>";
     }
 
     function renderBarrasCriterios(registros) {
@@ -470,7 +729,7 @@
         `;
       }).join("");
 
-      document.getElementById("barrasCriterios").innerHTML = html;
+      document.getElementById("barrasCriterios").innerHTML = html || "<div>Sin datos visibles.</div>";
     }
 
     function renderTabla(registros) {
@@ -487,76 +746,162 @@
       `).join("");
 
       document.getElementById("tablaWrap").innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Sitio</th>
-              <th>Fecha</th>
-              <th>Tipo</th>
-              <th>Comunidad</th>
-              <th>Promedio</th>
-              <th>Nivel</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Sitio</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Comunidad</th>
+                <th>Promedio</th>
+                <th>Nivel</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
       `;
+    }
+
+    function renderTablaNBI(nbiRows) {
+      const rows = nbiRows.map(d => `
+        <tr>
+          <td>${d.sitio_nombre}</td>
+          <td>${d.departamento}</td>
+          <td>${d.municipio}</td>
+          <td>${d.codigo_lugar}</td>
+          <td>${d.comunidad}</td>
+          <td>${d.hogares}</td>
+          <td>${d.personas}</td>
+          <td>${d.nbi_calidad_vivienda.toFixed(1)}%</td>
+          <td>${d.nbi_hacinamiento.toFixed(1)}%</td>
+          <td>${d.nbi_agua.toFixed(1)}%</td>
+          <td>${d.nbi_drenajes.toFixed(1)}%</td>
+          <td>${d.nbi_escolar.toFixed(1)}%</td>
+          <td>${d.nbi_precariedad.toFixed(1)}%</td>
+          <td>${d.pobreza_general_pct.toFixed(1)}%</td>
+          <td>${d.pobreza_extrema_pct.toFixed(1)}%</td>
+          <td>${d.hogares_pobreza_general}</td>
+          <td>${d.hogares_pobreza_extrema}</td>
+        </tr>
+      `).join("");
+
+      document.getElementById("tablaNBIWrap").innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Sitio</th>
+                <th>Departamento</th>
+                <th>Municipio</th>
+                <th>Código lugar</th>
+                <th>Comunidad</th>
+                <th>Hogares</th>
+                <th>Personas</th>
+                <th>NBI 1 Vivienda</th>
+                <th>NBI 2 Hacinamiento</th>
+                <th>NBI 3 Agua</th>
+                <th>NBI 4 Drenajes</th>
+                <th>NBI 5 Escolar</th>
+                <th>NBI 6 Precariedad</th>
+                <th>Pobreza general</th>
+                <th>Pobreza extrema</th>
+                <th>Hogares pobreza general</th>
+                <th>Hogares pobreza extrema</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderRecomendacion(registros, nbiRows) {
+      const rec = document.getElementById("recomendacion");
+
+      if (!registros.length) {
+        rec.innerText = "No hay resultados visibles para generar una recomendación.";
+        return;
+      }
+
+      const mejor = registros[0];
+      const peor = registros[registros.length - 1];
+
+      const pobrezaProm = nbiRows.length
+        ? (nbiRows.reduce((acc, r) => acc + Number(r.pobreza_extrema_pct || 0), 0) / nbiRows.length).toFixed(1)
+        : "0.0";
+
+      rec.innerText =
+        `Con base en la evaluación realizada, se recomienda priorizar intervenciones en ${mejor.sitio}, ` +
+        `por presentar el mayor potencial relativo (${mejor.promedio.toFixed(2)}). ` +
+        `Asimismo, ${peor.sitio} requiere acciones orientadas a mejorar condiciones de infraestructura y servicios ` +
+        `para fortalecer su viabilidad territorial. ` +
+        `Las comunidades asociadas a los sitios visibles presentan en promedio ${pobrezaProm}% de pobreza extrema, ` +
+        `lo cual refuerza la pertinencia de intervenciones integrales con enfoque territorial y socioeconómico.`;
+    }
+
+    async function cargarDatosBase() {
+      const res = await fetch(API, { cache: "no-store" });
+      if (!res.ok) throw new Error("No se pudo leer la API");
+
+      const data = await res.json();
+
+      return data
+        .map(r => {
+          const promedio = Number(r.promedio || 0);
+          return {
+            ...r,
+            site_key: siteKeyFromName(r.sitio),
+            promedio,
+            nivel: clasificar(promedio),
+            lat: r.lat !== null ? Number(r.lat) : null,
+            lon: r.lon !== null ? Number(r.lon) : null,
+            atractivo: Number(r.atractivo || 0),
+            accesibilidad: Number(r.accesibilidad || 0),
+            infraestructura: Number(r.infraestructura || 0),
+            servicios: Number(r.servicios || 0),
+            sostenibilidad: Number(r.sostenibilidad || 0)
+          };
+        })
+        .sort((a, b) => b.promedio - a.promedio);
     }
 
     async function cargarDashboard() {
       const estado = document.getElementById("estado");
-      estado.textContent = "Cargando datos desde D1...";
+      estado.textContent = "Cargando datos...";
 
       try {
-        const res = await fetch(API, { cache: "no-store" });
-        if (!res.ok) throw new Error("No se pudo leer la API");
+        if (!cacheRegistros.length) {
+          cacheRegistros = await cargarDatosBase();
+          poblarFiltros(cacheRegistros);
+        }
 
-        const data = await res.json();
+        const registrosFiltrados = aplicarFiltros(cacheRegistros);
+        const nbiFiltrado = filtrarNBI(registrosFiltrados);
 
-        const registros = data
-          .map(r => {
-            const promedio = Number(r.promedio || 0);
-            return {
-              ...r,
-              promedio,
-              nivel: clasificar(promedio),
-              lat: r.lat !== null ? Number(r.lat) : null,
-              lon: r.lon !== null ? Number(r.lon) : null,
-              atractivo: Number(r.atractivo || 0),
-              accesibilidad: Number(r.accesibilidad || 0),
-              infraestructura: Number(r.infraestructura || 0),
-              servicios: Number(r.servicios || 0),
-              sostenibilidad: Number(r.sostenibilidad || 0)
-            };
-          })
-          .sort((a, b) => b.promedio - a.promedio);
+        renderMetricas(registrosFiltrados);
+        renderResumen(registrosFiltrados);
+        renderBarrasSitios(registrosFiltrados);
+        renderBarrasCriterios(registrosFiltrados);
+        renderTabla(registrosFiltrados);
+        renderMapa(registrosFiltrados);
+        renderTablaNBI(nbiFiltrado);
+        renderRecomendacion(registrosFiltrados, nbiFiltrado);
 
-        renderMetricas(registros);
-        renderResumen(registros);
-        renderBarrasSitios(registros);
-        renderBarrasCriterios(registros);
-        renderTabla(registros);
-        renderMapa(registros);
-
-        const ordenados = [...registros].sort((a, b) => b.promedio - a.promedio);
-        const mejor = ordenados[0];
-        const peor = ordenados[ordenados.length - 1];
-
-        const recomendacionTexto =
-          `Se recomienda priorizar intervenciones en ${mejor.sitio}, ` +
-          `que presenta el mayor potencial (${mejor.promedio.toFixed(2)}). ` +
-          `Asimismo, ${peor.sitio} requiere mejoras en infraestructura y servicios ` +
-          `para elevar su viabilidad territorial.`;
-
-        const rec = document.getElementById("recomendacion");
-        if (rec) rec.innerText = recomendacionTexto;
-
-        estado.textContent = `Se cargaron ${registros.length} registros desde la base de datos.`;
+        estado.textContent = `Se visualizaron ${registrosFiltrados.length} registros de evaluación y ${nbiFiltrado.length} filas socioeconómicas según la segmentación aplicada.`;
       } catch (error) {
         console.error(error);
         estado.innerHTML = `<span class="error">Error: ${error.message}</span>`;
       }
+    }
+
+    function limpiarFiltros() {
+      document.getElementById("filtroComunidad").value = "";
+      document.getElementById("filtroSitio").value = "";
+      document.getElementById("filtroNivel").value = "";
+      cargarDashboard();
     }
 
     cargarDashboard();
