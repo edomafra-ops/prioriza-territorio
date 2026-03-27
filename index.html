@@ -76,7 +76,7 @@
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 16px;
+      margin-top: 10px;
     }
 
     button {
@@ -499,14 +499,16 @@
         comunidad: "Chuipachec",
         hogares: 112,
         personas: 562,
-        nbi_calidad_vivienda: 51.8,
-        nbi_hacinamiento: 25.9,
+        nbi_calidad_vivienda: 51.78571429,
+        nbi_hacinamiento: 25.89285714,
         nbi_agua: 0.0,
-        nbi_drenajes: 92.9,
-        nbi_escolar: 1.8,
-        nbi_precariedad: 8.0,
-        pobreza_general_pct: 93.8,
-        pobreza_extrema_pct: 59.8,
+        nbi_drenajes: 92.85714286,
+        nbi_escolar: 1.785714286,
+        nbi_precariedad: 8.035714286,
+        indice_nbi: 93.75,
+        pobreza_general_pct: 93.75,
+        pobreza_extrema_pct: 59.82,
+        hogares_con_inbi: 105,
         hogares_pobreza_general: 105,
         hogares_pobreza_extrema: 67
       },
@@ -519,14 +521,16 @@
         comunidad: "Paxquecnil",
         hogares: 109,
         personas: 476,
-        nbi_calidad_vivienda: 0.9,
-        nbi_hacinamiento: 17.4,
-        nbi_agua: 6.4,
-        nbi_drenajes: 4.6,
-        nbi_escolar: 2.8,
-        nbi_precariedad: 5.5,
-        pobreza_general_pct: 27.5,
-        pobreza_extrema_pct: 9.2,
+        nbi_calidad_vivienda: 0.917431193,
+        nbi_hacinamiento: 17.43119266,
+        nbi_agua: 6.422018349,
+        nbi_drenajes: 4.587155963,
+        nbi_escolar: 2.752293578,
+        nbi_precariedad: 5.504587156,
+        indice_nbi: 27.52,
+        pobreza_general_pct: 27.52,
+        pobreza_extrema_pct: 9.17,
+        hogares_con_inbi: 30,
         hogares_pobreza_general: 30,
         hogares_pobreza_extrema: 10
       },
@@ -539,14 +543,16 @@
         comunidad: "Xecanchavox",
         hogares: 659,
         personas: 3121,
-        nbi_calidad_vivienda: 0.8,
-        nbi_hacinamiento: 19.4,
-        nbi_agua: 12.9,
-        nbi_drenajes: 0.3,
-        nbi_escolar: 0.5,
-        nbi_precariedad: 3.3,
-        pobreza_general_pct: 32.6,
-        pobreza_extrema_pct: 4.3,
+        nbi_calidad_vivienda: 0.758725341,
+        nbi_hacinamiento: 19.42336874,
+        nbi_agua: 12.8983308,
+        nbi_drenajes: 0.303490137,
+        nbi_escolar: 0.455235205,
+        nbi_precariedad: 3.338391502,
+        indice_nbi: 32.63,
+        pobreza_general_pct: 32.63,
+        pobreza_extrema_pct: 4.25,
+        hogares_con_inbi: 215,
         hogares_pobreza_general: 215,
         hogares_pobreza_extrema: 28
       },
@@ -559,14 +565,16 @@
         comunidad: "Xeabaj",
         hogares: 12,
         personas: 65,
-        nbi_calidad_vivienda: 8.3,
-        nbi_hacinamiento: 8.3,
+        nbi_calidad_vivienda: 8.333333333,
+        nbi_hacinamiento: 8.333333333,
         nbi_agua: 0.0,
         nbi_drenajes: 0.0,
-        nbi_escolar: 8.3,
+        nbi_escolar: 8.333333333,
         nbi_precariedad: 25.0,
-        pobreza_general_pct: 33.3,
-        pobreza_extrema_pct: 16.7,
+        indice_nbi: 33.33,
+        pobreza_general_pct: 33.33,
+        pobreza_extrema_pct: 16.67,
+        hogares_con_inbi: 4,
         hogares_pobreza_general: 4,
         hogares_pobreza_extrema: 2
       }
@@ -626,8 +634,8 @@
       const filtroComunidad = document.getElementById("filtroComunidad");
       const filtroSitio = document.getElementById("filtroSitio");
 
-      const valorComunidad = filtroComunidad.value;
-      const valorSitio = filtroSitio.value;
+      const comunidadActual = filtroComunidad.value;
+      const sitioActual = filtroSitio.value;
 
       const comunidades = Array.from(new Set(NBI_DATA.map(d => d.comunidad))).sort();
       const sitios = Array.from(new Set(registros.map(r => r.sitio))).sort();
@@ -640,16 +648,24 @@
         `<option value="">Todos los sitios</option>` +
         sitios.map(s => `<option value="${s}">${s}</option>`).join("");
 
-      if (comunidades.includes(valorComunidad)) filtroComunidad.value = valorComunidad;
-      if (sitios.includes(valorSitio)) filtroSitio.value = valorSitio;
+      if (comunidades.includes(comunidadActual)) filtroComunidad.value = comunidadActual;
+      if (sitios.includes(sitioActual)) filtroSitio.value = sitioActual;
     }
 
     function actualizarOpcionesFiltros(registros) {
       const filtroComunidad = document.getElementById("filtroComunidad");
       const filtroSitio = document.getElementById("filtroSitio");
+      const filtroNivel = document.getElementById("filtroNivel");
 
       const comunidadSeleccionada = filtroComunidad.value;
       const sitioSeleccionado = filtroSitio.value;
+      const nivelSeleccionado = filtroNivel.value;
+
+      let posibles = [...registros];
+
+      if (nivelSeleccionado) {
+        posibles = posibles.filter(r => r.nivel === nivelSeleccionado);
+      }
 
       const sitioAComunidades = {};
       const comunidadASitios = {};
@@ -662,28 +678,51 @@
         comunidadASitios[d.comunidad].add(d.sitio_nombre);
       });
 
-      const comunidadesDisponibles = sitioSeleccionado
-        ? Array.from(sitioAComunidades[sitioSeleccionado] || [])
-        : Array.from(new Set(NBI_DATA.map(d => d.comunidad)));
+      let comunidadesDisponibles;
+      if (sitioSeleccionado) {
+        comunidadesDisponibles = Array.from(sitioAComunidades[sitioSeleccionado] || []);
+      } else {
+        const sitiosPosibles = new Set(posibles.map(r => r.sitio));
+        comunidadesDisponibles = Array.from(
+          new Set(
+            NBI_DATA
+              .filter(d => sitiosPosibles.has(d.sitio_nombre))
+              .map(d => d.comunidad)
+          )
+        );
+      }
 
-      const sitiosDisponibles = comunidadSeleccionada
-        ? Array.from(comunidadASitios[comunidadSeleccionada] || [])
-        : Array.from(new Set(registros.map(r => r.sitio)));
+      let sitiosDisponibles;
+      if (comunidadSeleccionada) {
+        const sitiosDeComunidad = Array.from(comunidadASitios[comunidadSeleccionada] || []);
+        sitiosDisponibles = posibles
+          .map(r => r.sitio)
+          .filter(s => sitiosDeComunidad.includes(s));
+      } else {
+        sitiosDisponibles = posibles.map(r => r.sitio);
+      }
+
+      comunidadesDisponibles = Array.from(new Set(comunidadesDisponibles)).sort();
+      sitiosDisponibles = Array.from(new Set(sitiosDisponibles)).sort();
 
       filtroComunidad.innerHTML =
         `<option value="">Todas las comunidades</option>` +
-        comunidadesDisponibles.sort().map(c => `<option value="${c}">${c}</option>`).join("");
+        comunidadesDisponibles.map(c => `<option value="${c}">${c}</option>`).join("");
 
       filtroSitio.innerHTML =
         `<option value="">Todos los sitios</option>` +
-        sitiosDisponibles.sort().map(s => `<option value="${s}">${s}</option>`).join("");
+        sitiosDisponibles.map(s => `<option value="${s}">${s}</option>`).join("");
 
       if (comunidadSeleccionada && comunidadesDisponibles.includes(comunidadSeleccionada)) {
         filtroComunidad.value = comunidadSeleccionada;
+      } else if (comunidadSeleccionada) {
+        filtroComunidad.value = "";
       }
 
       if (sitioSeleccionado && sitiosDisponibles.includes(sitioSeleccionado)) {
         filtroSitio.value = sitioSeleccionado;
+      } else if (sitioSeleccionado) {
+        filtroSitio.value = "";
       }
     }
 
@@ -694,12 +733,12 @@
 
       let filtrados = [...registros];
 
-      if (sitio) {
-        filtrados = filtrados.filter(r => r.sitio === sitio);
-      }
-
       if (nivel) {
         filtrados = filtrados.filter(r => r.nivel === nivel);
+      }
+
+      if (sitio) {
+        filtrados = filtrados.filter(r => r.sitio === sitio);
       }
 
       if (comunidad) {
@@ -708,7 +747,6 @@
             .filter(d => d.comunidad === comunidad)
             .map(d => d.sitio_nombre)
         );
-
         filtrados = filtrados.filter(r => sitiosValidos.has(r.sitio));
       }
 
@@ -930,7 +968,7 @@
         const filas = agrupados[sitio];
 
         const promNBI = (
-          filas.reduce((acc, r) => acc + Number(r.nbi_precariedad || 0), 0) / filas.length
+          filas.reduce((acc, r) => acc + Number(r.indice_nbi || 0), 0) / filas.length
         ).toFixed(1);
 
         const promPobrezaExtrema = (
@@ -945,7 +983,7 @@
                 <div class="nbi-site-subtitle">Comunidades asociadas y condiciones socioeconómicas</div>
               </div>
               <div class="nbi-summary">
-                <span class="nbi-chip">Prom. precariedad: <strong>${promNBI}%</strong></span>
+                <span class="nbi-chip">Índice NBI prom.: <strong>${promNBI}%</strong></span>
                 <span class="nbi-chip ${claseSeveridad(promPobrezaExtrema)}">Pobreza extrema prom.: <strong>${promPobrezaExtrema}%</strong></span>
               </div>
             </div>
@@ -961,9 +999,10 @@
                     <th>NBI vivienda</th>
                     <th>NBI hacinamiento</th>
                     <th>NBI agua</th>
-                    <th>NBI drenajes</th>
-                    <th>NBI escolar</th>
-                    <th>NBI precariedad</th>
+                    <th>NBI sanitario</th>
+                    <th>NBI educación</th>
+                    <th>NBI subsistencia</th>
+                    <th>Índice NBI</th>
                     <th>Pobreza general</th>
                     <th>Pobreza extrema</th>
                     <th>Severidad</th>
@@ -982,6 +1021,7 @@
                       <td>${Number(d.nbi_drenajes).toFixed(1)}%</td>
                       <td>${Number(d.nbi_escolar).toFixed(1)}%</td>
                       <td>${Number(d.nbi_precariedad).toFixed(1)}%</td>
+                      <td>${Number(d.indice_nbi).toFixed(1)}%</td>
                       <td>${Number(d.pobreza_general_pct).toFixed(1)}%</td>
                       <td>${Number(d.pobreza_extrema_pct).toFixed(1)}%</td>
                       <td>
@@ -1086,16 +1126,23 @@
       document.getElementById("filtroComunidad").value = "";
       document.getElementById("filtroSitio").value = "";
       document.getElementById("filtroNivel").value = "";
-      actualizarOpcionesFiltros(cacheRegistros);
+      poblarFiltros(cacheRegistros);
       cargarDashboard();
     }
 
     document.getElementById("filtroComunidad").addEventListener("change", () => {
       actualizarOpcionesFiltros(cacheRegistros);
+      cargarDashboard();
     });
 
     document.getElementById("filtroSitio").addEventListener("change", () => {
       actualizarOpcionesFiltros(cacheRegistros);
+      cargarDashboard();
+    });
+
+    document.getElementById("filtroNivel").addEventListener("change", () => {
+      actualizarOpcionesFiltros(cacheRegistros);
+      cargarDashboard();
     });
 
     cargarDashboard();
