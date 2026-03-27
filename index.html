@@ -31,7 +31,7 @@
     }
 
     .container {
-      max-width: 1250px;
+      max-width: 1280px;
       margin: 24px auto;
       padding: 0 16px 24px;
     }
@@ -40,26 +40,27 @@
       background: linear-gradient(135deg, #1f4e78, #2d6b97);
       color: white;
       border-radius: 16px;
-      padding: 22px 24px;
+      padding: 24px 26px;
       margin-bottom: 18px;
     }
 
     .header h1 {
       margin: 0 0 6px 0;
-      font-size: 30px;
+      font-size: 32px;
     }
 
     .header p {
       margin: 0;
-      opacity: 0.95;
+      opacity: 0.96;
       line-height: 1.5;
+      font-size: 15px;
     }
 
     .actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     button {
@@ -144,7 +145,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
     .pill {
@@ -153,6 +154,17 @@
       border-radius: 999px;
       padding: 8px 12px;
       font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .mensaje-box {
+      border: 1px solid var(--border);
+      background: #eef6fb;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 18px;
     }
 
     .bar-list {
@@ -163,7 +175,7 @@
 
     .bar-item {
       display: grid;
-      grid-template-columns: 190px 1fr 60px;
+      grid-template-columns: 190px 1fr 70px;
       gap: 10px;
       align-items: center;
     }
@@ -201,6 +213,7 @@
     th {
       background: #f0f4f8;
       color: var(--primary);
+      font-weight: 700;
     }
 
     td:first-child, th:first-child {
@@ -221,17 +234,17 @@
     }
 
     .tag-alto {
-      background: var(--good);
+      background: #dff0d8;
       color: #155724;
     }
 
     .tag-medio {
-      background: var(--mid);
+      background: #fff3cd;
       color: #856404;
     }
 
     .tag-bajo {
-      background: var(--bad);
+      background: #f8d7da;
       color: #721c24;
     }
 
@@ -279,6 +292,7 @@
       <div class="panel">
         <h3>Resumen ejecutivo</h3>
         <div class="kpis" id="resumenEjecutivo"></div>
+        <div id="mensajeEstrategico"></div>
         <h3 style="margin-top:18px;">Promedio por sitio</h3>
         <div class="bar-list" id="barrasSitios"></div>
       </div>
@@ -301,6 +315,20 @@
     let mapa = null;
     let capaMarcadores = null;
 
+    function clasificar(promedio) {
+      if (promedio >= 4) return "Alto";
+      if (promedio >= 3) return "Medio";
+      return "Bajo";
+    }
+
+    function calcularViabilidad(r) {
+      return (
+        (Number(r.accesibilidad || 0) +
+         Number(r.infraestructura || 0) +
+         Number(r.servicios || 0)) / 3
+      );
+    }
+
     function claseNivel(nivel) {
       const n = String(nivel || "").toLowerCase();
       if (n === "alto") return "tag tag-alto";
@@ -310,9 +338,9 @@
 
     function colorNivel(nivel) {
       const n = String(nivel || "").toLowerCase();
-      if (n === "alto") return "#28a745";
-      if (n === "medio") return "#f0ad4e";
-      return "#dc3545";
+      if (n === "alto") return "#2ecc71";
+      if (n === "medio") return "#f1c40f";
+      return "#e74c3c";
     }
 
     function initMapa() {
@@ -331,7 +359,7 @@
       const bounds = [];
 
       registros.forEach(r => {
-        if (typeof r.lat === "number" && typeof r.lon === "number") {
+        if (typeof r.lat === "number" && typeof r.lon === "number" && !Number.isNaN(r.lat) && !Number.isNaN(r.lon)) {
           const marker = L.circleMarker([r.lat, r.lon], {
             radius: 9,
             color: colorNivel(r.nivel),
@@ -361,7 +389,6 @@
     function renderMetricas(registros) {
       const altos = registros.filter(r => (r.nivel || "").toLowerCase() === "alto").length;
       const medios = registros.filter(r => (r.nivel || "").toLowerCase() === "medio").length;
-      const bajos = registros.filter(r => (r.nivel || "").toLowerCase() === "bajo").length;
 
       const promedioGeneral = registros.length
         ? (registros.reduce((acc, r) => acc + Number(r.promedio || 0), 0) / registros.length).toFixed(2)
@@ -379,10 +406,40 @@
       const mejor = registros[0]?.sitio || "-";
       const peor = registros[registros.length - 1]?.sitio || "-";
 
+      const viabilidadProm = registros.length
+        ? (
+            registros.reduce((acc, r) => acc + calcularViabilidad(r), 0) /
+            registros.length
+          ).toFixed(2)
+        : "0.00";
+
       document.getElementById("resumenEjecutivo").innerHTML = `
         <div class="pill">Mejor evaluado: <strong>${mejor}</strong></div>
         <div class="pill">Menor puntaje: <strong>${peor}</strong></div>
+        <div class="pill">Índice de viabilidad: <strong>${viabilidadProm}</strong></div>
         <div class="pill">Registros cargados: <strong>${registros.length}</strong></div>
+      `;
+    }
+
+    function generarMensaje(registros) {
+      const promedio = registros.length
+        ? registros.reduce((acc, r) => acc + Number(r.promedio || 0), 0) / registros.length
+        : 0;
+
+      let mensaje = "";
+
+      if (promedio >= 4) {
+        mensaje = "Alta prioridad territorial. Condiciones favorables para inversión inmediata.";
+      } else if (promedio >= 3) {
+        mensaje = "Prioridad media. Se recomienda fortalecer infraestructura, servicios y condiciones de implementación territorial.";
+      } else {
+        mensaje = "Prioridad baja. Se requieren intervenciones estructurales previas antes de una inversión mayor.";
+      }
+
+      document.getElementById("mensajeEstrategico").innerHTML = `
+        <div class="mensaje-box">
+          <strong>Conclusión automática:</strong> ${mensaje}
+        </div>
       `;
     }
 
@@ -412,10 +469,14 @@
       ];
 
       const html = criterios.map(([label, key]) => {
-        const valores = registros.map(r => Number(r[key] || 0)).filter(v => !Number.isNaN(v) && v > 0);
+        const valores = registros
+          .map(r => Number(r[key] || 0))
+          .filter(v => !Number.isNaN(v) && v > 0);
+
         const promedio = valores.length
           ? valores.reduce((a, b) => a + b, 0) / valores.length
           : 0;
+
         const width = Math.max(8, (promedio / 5) * 100);
 
         return `
@@ -472,16 +533,26 @@
         const data = await res.json();
 
         const registros = data
-          .map(r => ({
-            ...r,
-            promedio: Number(r.promedio || 0),
-            lat: r.lat !== null ? Number(r.lat) : null,
-            lon: r.lon !== null ? Number(r.lon) : null
-          }))
+          .map(r => {
+            const promedio = Number(r.promedio || 0);
+            return {
+              ...r,
+              promedio,
+              nivel: clasificar(promedio),
+              lat: r.lat !== null ? Number(r.lat) : null,
+              lon: r.lon !== null ? Number(r.lon) : null,
+              atractivo: Number(r.atractivo || 0),
+              accesibilidad: Number(r.accesibilidad || 0),
+              infraestructura: Number(r.infraestructura || 0),
+              servicios: Number(r.servicios || 0),
+              sostenibilidad: Number(r.sostenibilidad || 0)
+            };
+          })
           .sort((a, b) => b.promedio - a.promedio);
 
         renderMetricas(registros);
         renderResumen(registros);
+        generarMensaje(registros);
         renderBarrasSitios(registros);
         renderBarrasCriterios(registros);
         renderTabla(registros);
