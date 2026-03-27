@@ -37,3 +37,25 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 }
+await context.env.DB.prepare(`
+  INSERT INTO visitas (
+    sitio, fecha, tipo_atractivo, comunidad,
+    lat, lon, promedio, nivel,
+    atractivo, accesibilidad, infraestructura, servicios, sostenibilidad
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`).bind(
+  body.sitio,
+  body.fecha,
+  body.tipo_atractivo,
+  body.comunidad,
+  body.coordenadas?.lat ?? null,
+  body.coordenadas?.lon ?? null,
+  body.promedio_evaluacion ?? 0,
+  body.nivel_preliminar ?? "Medio",
+  body.atractivo ?? 0,
+  body.accesibilidad ?? 0,
+  body.infraestructura ?? 0,
+  body.servicios ?? 0,
+  body.sostenibilidad ?? 0
+).run();
