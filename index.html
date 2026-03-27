@@ -560,13 +560,6 @@
         renderBarrasCriterios(registros);
         renderTabla(registros);
         renderMapa(registros);
-
-        estado.textContent = `Se cargaron ${registros.length} registros desde la base de datos.`;
-      } catch (error) {
-        console.error(error);
-        estado.innerHTML = `<span class="error">Error: ${error.message}</span>`;
-      }
-    }
 const ordenados = [...data].sort((a, b) => b.promedio - a.promedio);
 
 const mejor = ordenados[0];
@@ -577,6 +570,13 @@ const recomendacionTexto =
   que presenta el mayor potencial (${mejor.promedio}). 
   Asimismo, ${peor.sitio} requiere mejoras en infraestructura y servicios 
   para elevar su viabilidad territorial.`;
+        
+        estado.textContent = `Se cargaron ${registros.length} registros desde la base de datos.`;
+      } catch (error) {
+        console.error(error);
+        estado.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+      }
+    }
 
 // insertar en HTML
 const rec = document.getElementById("recomendacion");
