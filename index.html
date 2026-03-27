@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -296,6 +295,90 @@
       font-weight: 700;
     }
 
+    .nbi-block {
+      margin-bottom: 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .nbi-block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #f7fafc;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nbi-site-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .nbi-site-subtitle {
+      font-size: 12px;
+      color: #6c7880;
+    }
+
+    .nbi-summary {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nbi-chip {
+      font-size: 12px;
+      background: #eef4f8;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+    }
+
+    .nbi-table th {
+      background: #eef4f8;
+    }
+
+    .nbi-empty {
+      padding: 18px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: #5c6972;
+      background: #fafcfe;
+    }
+
+    .sev-tag {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .sev-alta {
+      background: #f8d7da;
+      color: #721c24;
+      border-color: #f1b8bf;
+    }
+
+    .sev-media {
+      background: #fff3cd;
+      color: #856404;
+      border-color: #f2de91;
+    }
+
+    .sev-baja {
+      background: #dff0d8;
+      color: #155724;
+      border-color: #b9dfac;
+    }
+
     @media (max-width: 1100px) {
       .metrics { grid-template-columns: 1fr 1fr; }
       .grid { grid-template-columns: 1fr; }
@@ -406,7 +489,6 @@
   <script>
     const API = "/api/resultados";
 
-    // Tabla NBI integrada desde el Excel compartido
     const NBI_DATA = [
       {
         sitio_key: "mirador_vivero_forestal",
@@ -544,14 +626,65 @@
       const filtroComunidad = document.getElementById("filtroComunidad");
       const filtroSitio = document.getElementById("filtroSitio");
 
+      const valorComunidad = filtroComunidad.value;
+      const valorSitio = filtroSitio.value;
+
       const comunidades = Array.from(new Set(NBI_DATA.map(d => d.comunidad))).sort();
       const sitios = Array.from(new Set(registros.map(r => r.sitio))).sort();
 
-      filtroComunidad.innerHTML = `<option value="">Todas las comunidades</option>` +
+      filtroComunidad.innerHTML =
+        `<option value="">Todas las comunidades</option>` +
         comunidades.map(c => `<option value="${c}">${c}</option>`).join("");
 
-      filtroSitio.innerHTML = `<option value="">Todos los sitios</option>` +
+      filtroSitio.innerHTML =
+        `<option value="">Todos los sitios</option>` +
         sitios.map(s => `<option value="${s}">${s}</option>`).join("");
+
+      if (comunidades.includes(valorComunidad)) filtroComunidad.value = valorComunidad;
+      if (sitios.includes(valorSitio)) filtroSitio.value = valorSitio;
+    }
+
+    function actualizarOpcionesFiltros(registros) {
+      const filtroComunidad = document.getElementById("filtroComunidad");
+      const filtroSitio = document.getElementById("filtroSitio");
+
+      const comunidadSeleccionada = filtroComunidad.value;
+      const sitioSeleccionado = filtroSitio.value;
+
+      const sitioAComunidades = {};
+      const comunidadASitios = {};
+
+      NBI_DATA.forEach(d => {
+        if (!sitioAComunidades[d.sitio_nombre]) sitioAComunidades[d.sitio_nombre] = new Set();
+        if (!comunidadASitios[d.comunidad]) comunidadASitios[d.comunidad] = new Set();
+
+        sitioAComunidades[d.sitio_nombre].add(d.comunidad);
+        comunidadASitios[d.comunidad].add(d.sitio_nombre);
+      });
+
+      const comunidadesDisponibles = sitioSeleccionado
+        ? Array.from(sitioAComunidades[sitioSeleccionado] || [])
+        : Array.from(new Set(NBI_DATA.map(d => d.comunidad)));
+
+      const sitiosDisponibles = comunidadSeleccionada
+        ? Array.from(comunidadASitios[comunidadSeleccionada] || [])
+        : Array.from(new Set(registros.map(r => r.sitio)));
+
+      filtroComunidad.innerHTML =
+        `<option value="">Todas las comunidades</option>` +
+        comunidadesDisponibles.sort().map(c => `<option value="${c}">${c}</option>`).join("");
+
+      filtroSitio.innerHTML =
+        `<option value="">Todos los sitios</option>` +
+        sitiosDisponibles.sort().map(s => `<option value="${s}">${s}</option>`).join("");
+
+      if (comunidadSeleccionada && comunidadesDisponibles.includes(comunidadSeleccionada)) {
+        filtroComunidad.value = comunidadSeleccionada;
+      }
+
+      if (sitioSeleccionado && sitiosDisponibles.includes(sitioSeleccionado)) {
+        filtroSitio.value = sitioSeleccionado;
+      }
     }
 
     function aplicarFiltros(registros) {
@@ -570,13 +703,13 @@
       }
 
       if (comunidad) {
-        const keysValidas = new Set(
+        const sitiosValidos = new Set(
           NBI_DATA
             .filter(d => d.comunidad === comunidad)
-            .map(d => d.sitio_key)
+            .map(d => d.sitio_nombre)
         );
 
-        filtrados = filtrados.filter(r => keysValidas.has(r.site_key));
+        filtrados = filtrados.filter(r => sitiosValidos.has(r.sitio));
       }
 
       return filtrados;
@@ -586,23 +719,34 @@
       const comunidad = document.getElementById("filtroComunidad").value;
       const sitio = document.getElementById("filtroSitio").value;
 
-      let nbi = [...NBI_DATA];
+      let filas = [...NBI_DATA];
 
       if (comunidad) {
-        nbi = nbi.filter(d => d.comunidad === comunidad);
+        filas = filas.filter(d => d.comunidad === comunidad);
       }
 
       if (sitio) {
-        const key = siteKeyFromName(sitio);
-        nbi = nbi.filter(d => d.sitio_key === key);
+        filas = filas.filter(d => d.sitio_nombre === sitio);
       }
 
-      if (!comunidad && !sitio) {
-        const keys = new Set(registrosFiltrados.map(r => r.site_key));
-        nbi = nbi.filter(d => keys.has(d.sitio_key));
-      }
+      const sitiosVisibles = new Set(registrosFiltrados.map(r => r.sitio));
+      filas = filas.filter(d => sitiosVisibles.has(d.sitio_nombre));
 
-      return nbi;
+      return filas;
+    }
+
+    function claseSeveridad(valor) {
+      const v = Number(valor || 0);
+      if (v >= 60) return "sev-alta";
+      if (v >= 30) return "sev-media";
+      return "sev-baja";
+    }
+
+    function etiquetaSeveridad(valor) {
+      const v = Number(valor || 0);
+      if (v >= 60) return "Alta";
+      if (v >= 30) return "Media";
+      return "Baja";
     }
 
     function initMapa() {
@@ -767,56 +911,94 @@
     }
 
     function renderTablaNBI(nbiRows) {
-      const rows = nbiRows.map(d => `
-        <tr>
-          <td>${d.sitio_nombre}</td>
-          <td>${d.departamento}</td>
-          <td>${d.municipio}</td>
-          <td>${d.codigo_lugar}</td>
-          <td>${d.comunidad}</td>
-          <td>${d.hogares}</td>
-          <td>${d.personas}</td>
-          <td>${d.nbi_calidad_vivienda.toFixed(1)}%</td>
-          <td>${d.nbi_hacinamiento.toFixed(1)}%</td>
-          <td>${d.nbi_agua.toFixed(1)}%</td>
-          <td>${d.nbi_drenajes.toFixed(1)}%</td>
-          <td>${d.nbi_escolar.toFixed(1)}%</td>
-          <td>${d.nbi_precariedad.toFixed(1)}%</td>
-          <td>${d.pobreza_general_pct.toFixed(1)}%</td>
-          <td>${d.pobreza_extrema_pct.toFixed(1)}%</td>
-          <td>${d.hogares_pobreza_general}</td>
-          <td>${d.hogares_pobreza_extrema}</td>
-        </tr>
-      `).join("");
+      if (!nbiRows.length) {
+        document.getElementById("tablaNBIWrap").innerHTML = `
+          <div class="nbi-empty">No hay información socioeconómica asociada a la selección actual.</div>
+        `;
+        return;
+      }
 
-      document.getElementById("tablaNBIWrap").innerHTML = `
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Sitio</th>
-                <th>Departamento</th>
-                <th>Municipio</th>
-                <th>Código lugar</th>
-                <th>Comunidad</th>
-                <th>Hogares</th>
-                <th>Personas</th>
-                <th>NBI 1 Vivienda</th>
-                <th>NBI 2 Hacinamiento</th>
-                <th>NBI 3 Agua</th>
-                <th>NBI 4 Drenajes</th>
-                <th>NBI 5 Escolar</th>
-                <th>NBI 6 Precariedad</th>
-                <th>Pobreza general</th>
-                <th>Pobreza extrema</th>
-                <th>Hogares pobreza general</th>
-                <th>Hogares pobreza extrema</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
+      const agrupados = {};
+      nbiRows.forEach(row => {
+        if (!agrupados[row.sitio_nombre]) agrupados[row.sitio_nombre] = [];
+        agrupados[row.sitio_nombre].push(row);
+      });
+
+      let html = "";
+
+      Object.keys(agrupados).forEach(sitio => {
+        const filas = agrupados[sitio];
+
+        const promNBI = (
+          filas.reduce((acc, r) => acc + Number(r.nbi_precariedad || 0), 0) / filas.length
+        ).toFixed(1);
+
+        const promPobrezaExtrema = (
+          filas.reduce((acc, r) => acc + Number(r.pobreza_extrema_pct || 0), 0) / filas.length
+        ).toFixed(1);
+
+        html += `
+          <div class="nbi-block">
+            <div class="nbi-block-header">
+              <div>
+                <div class="nbi-site-title">${sitio}</div>
+                <div class="nbi-site-subtitle">Comunidades asociadas y condiciones socioeconómicas</div>
+              </div>
+              <div class="nbi-summary">
+                <span class="nbi-chip">Prom. precariedad: <strong>${promNBI}%</strong></span>
+                <span class="nbi-chip ${claseSeveridad(promPobrezaExtrema)}">Pobreza extrema prom.: <strong>${promPobrezaExtrema}%</strong></span>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="nbi-table">
+                <thead>
+                  <tr>
+                    <th>Comunidad</th>
+                    <th>Municipio</th>
+                    <th>Hogares</th>
+                    <th>Personas</th>
+                    <th>NBI vivienda</th>
+                    <th>NBI hacinamiento</th>
+                    <th>NBI agua</th>
+                    <th>NBI drenajes</th>
+                    <th>NBI escolar</th>
+                    <th>NBI precariedad</th>
+                    <th>Pobreza general</th>
+                    <th>Pobreza extrema</th>
+                    <th>Severidad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filas.map(d => `
+                    <tr>
+                      <td><strong>${d.comunidad}</strong></td>
+                      <td>${d.municipio}</td>
+                      <td>${d.hogares}</td>
+                      <td>${d.personas}</td>
+                      <td>${Number(d.nbi_calidad_vivienda).toFixed(1)}%</td>
+                      <td>${Number(d.nbi_hacinamiento).toFixed(1)}%</td>
+                      <td>${Number(d.nbi_agua).toFixed(1)}%</td>
+                      <td>${Number(d.nbi_drenajes).toFixed(1)}%</td>
+                      <td>${Number(d.nbi_escolar).toFixed(1)}%</td>
+                      <td>${Number(d.nbi_precariedad).toFixed(1)}%</td>
+                      <td>${Number(d.pobreza_general_pct).toFixed(1)}%</td>
+                      <td>${Number(d.pobreza_extrema_pct).toFixed(1)}%</td>
+                      <td>
+                        <span class="sev-tag ${claseSeveridad(d.pobreza_extrema_pct)}">
+                          ${etiquetaSeveridad(d.pobreza_extrema_pct)}
+                        </span>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById("tablaNBIWrap").innerHTML = html;
     }
 
     function renderRecomendacion(registros, nbiRows) {
@@ -879,6 +1061,8 @@
           poblarFiltros(cacheRegistros);
         }
 
+        actualizarOpcionesFiltros(cacheRegistros);
+
         const registrosFiltrados = aplicarFiltros(cacheRegistros);
         const nbiFiltrado = filtrarNBI(registrosFiltrados);
 
@@ -902,8 +1086,17 @@
       document.getElementById("filtroComunidad").value = "";
       document.getElementById("filtroSitio").value = "";
       document.getElementById("filtroNivel").value = "";
+      actualizarOpcionesFiltros(cacheRegistros);
       cargarDashboard();
     }
+
+    document.getElementById("filtroComunidad").addEventListener("change", () => {
+      actualizarOpcionesFiltros(cacheRegistros);
+    });
+
+    document.getElementById("filtroSitio").addEventListener("change", () => {
+      actualizarOpcionesFiltros(cacheRegistros);
+    });
 
     cargarDashboard();
   </script>
