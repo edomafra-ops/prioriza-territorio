@@ -560,17 +560,20 @@
         renderBarrasCriterios(registros);
         renderTabla(registros);
         renderMapa(registros);
-const ordenados = [...data].sort((a, b) => b.promedio - a.promedio);
+const ordenados = [...registros].sort((a, b) => b.promedio - a.promedio);
 
 const mejor = ordenados[0];
 const peor = ordenados[ordenados.length - 1];
 
-const recomendacionTexto = 
-  `Se recomienda priorizar intervenciones en ${mejor.sitio}, 
-  que presenta el mayor potencial (${mejor.promedio}). 
-  Asimismo, ${peor.sitio} requiere mejoras en infraestructura y servicios 
-  para elevar su viabilidad territorial.`;
-        
+const recomendacionTexto =
+  `Se recomienda priorizar intervenciones en ${mejor.sitio}, ` +
+  `que presenta el mayor potencial (${mejor.promedio}). ` +
+  `Asimismo, ${peor.sitio} requiere mejoras en infraestructura y servicios ` +
+  `para elevar su viabilidad territorial.`;
+
+const rec = document.getElementById("recomendacion");
+if (rec) rec.innerText = recomendacionTexto;
+             
         estado.textContent = `Se cargaron ${registros.length} registros desde la base de datos.`;
       } catch (error) {
         console.error(error);
