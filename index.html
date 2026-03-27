@@ -297,7 +297,10 @@
         <div class="bar-list" id="barrasSitios"></div>
       </div>
     </div>
-
+<div class="card">
+  <h3>Recomendación estratégica</h3>
+  <p id="recomendacion" style="margin-top:8px; line-height:1.4;"></p>
+</div>
     <div class="panel" style="margin-bottom:18px;">
       <h3>Puntajes por criterio</h3>
       <div class="bar-list" id="barrasCriterios"></div>
@@ -564,7 +567,20 @@
         estado.innerHTML = `<span class="error">Error: ${error.message}</span>`;
       }
     }
+const ordenados = [...data].sort((a, b) => b.promedio - a.promedio);
 
+const mejor = ordenados[0];
+const peor = ordenados[ordenados.length - 1];
+
+const recomendacionTexto = 
+  `Se recomienda priorizar intervenciones en ${mejor.sitio}, 
+  que presenta el mayor potencial (${mejor.promedio}). 
+  Asimismo, ${peor.sitio} requiere mejoras en infraestructura y servicios 
+  para elevar su viabilidad territorial.`;
+
+// insertar en HTML
+const rec = document.getElementById("recomendacion");
+if (rec) rec.innerText = recomendacionTexto;
     cargarDashboard();
   </script>
 </body>
