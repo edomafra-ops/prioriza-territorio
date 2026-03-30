@@ -379,6 +379,58 @@
       border-color: #b9dfac;
     }
 
+    .narrativa-box, .conclusiones-box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: #fbfdff;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .conclusiones-box ol {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .pdf-hidden {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      width: 980px;
+      background: white;
+      color: #1f2933;
+      padding: 32px;
+    }
+
+    .pdf-cover {
+      height: 1000px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border: 2px solid #d9e4ec;
+      padding: 50px;
+    }
+
+    .pdf-cover h1 {
+      font-size: 30px;
+      color: #1f4e78;
+      margin-bottom: 16px;
+    }
+
+    .pdf-cover h2 {
+      font-size: 22px;
+      color: #2d6b97;
+      margin: 0 0 24px 0;
+      font-weight: 700;
+    }
+
+    .pdf-cover p {
+      font-size: 16px;
+      line-height: 1.7;
+      margin: 8px 0;
+    }
+
     @media (max-width: 1100px) {
       .metrics { grid-template-columns: 1fr 1fr; }
       .grid { grid-template-columns: 1fr; }
@@ -393,7 +445,7 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="dashboardRoot">
 
     <div class="header">
       <h1>Evaluación de Sitios Turísticos</h1>
@@ -435,6 +487,7 @@
       <div class="actions">
         <button onclick="cargarDashboard()">Aplicar filtros</button>
         <button class="secondary" onclick="limpiarFiltros()">Limpiar filtros</button>
+        <button onclick="generarPDF()">Descargar informe PDF</button>
       </div>
     </div>
 
@@ -463,6 +516,11 @@
     </div>
 
     <div class="panel">
+      <h3>Narrativa automática</h3>
+      <div id="narrativaAutomatica" class="narrativa-box"></div>
+    </div>
+
+    <div class="panel">
       <h3>Puntajes por criterio</h3>
       <div class="bar-list" id="barrasCriterios"></div>
       <div class="note">
@@ -483,9 +541,19 @@
       </div>
     </div>
 
+    <div class="panel">
+      <h3>Conclusiones</h3>
+      <div id="conclusionesFuertes" class="conclusiones-box"></div>
+    </div>
+
   </div>
 
+  <div id="pdfTemplate" class="pdf-hidden"></div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <script>
     const API = "/api/resultados";
 
@@ -583,6 +651,10 @@
     let mapa = null;
     let capaMarcadores = null;
     let cacheRegistros = [];
+    let ultimoEstado = {
+      registros: [],
+      nbi: []
+    };
 
     function normalizarTexto(texto) {
       return String(texto || "")
@@ -1065,6 +1137,67 @@
         `lo cual refuerza la pertinencia de intervenciones integrales con enfoque territorial y socioeconómico.`;
     }
 
+    function renderNarrativa(registros, nbiRows) {
+      const cont = document.getElementById("narrativaAutomatica");
+
+      if (!registros.length) {
+        cont.innerText = "No hay datos visibles para construir una narrativa automática.";
+        return;
+      }
+
+      const promedioGeneral = registros.reduce((a, b) => a + Number(b.promedio || 0), 0) / registros.length;
+      const mejor = registros[0];
+      const peor = registros[registros.length - 1];
+      const pobrezaProm = nbiRows.length
+        ? (nbiRows.reduce((acc, r) => acc + Number(r.pobreza_extrema_pct || 0), 0) / nbiRows.length)
+        : 0;
+
+      let lecturaPrioridad = "";
+      if (promedioGeneral >= 4) {
+        lecturaPrioridad = "un nivel alto de aptitud territorial para inversión";
+      } else if (promedioGeneral >= 3) {
+        lecturaPrioridad = "un nivel medio de aptitud territorial para inversión";
+      } else {
+        lecturaPrioridad = "un nivel bajo de aptitud territorial para inversión";
+      }
+
+      cont.innerText =
+        `La comisión técnica evidencia ${lecturaPrioridad}, con un promedio general de ${promedioGeneral.toFixed(2)} ` +
+        `para los sitios actualmente visibles. ${mejor.sitio} concentra la mejor valoración relativa, mientras que ` +
+        `${peor.sitio} presenta mayores limitaciones para su aprovechamiento inmediato. ` +
+        `Desde el punto de vista socioeconómico, las comunidades asociadas muestran en promedio ${pobrezaProm.toFixed(1)}% ` +
+        `de pobreza extrema, lo que fortalece el argumento de priorizar intervenciones no solo por potencial turístico, ` +
+        `sino también por su capacidad de incidir en territorios con mayores brechas.`;
+    }
+
+    function renderConclusiones(registros, nbiRows) {
+      const cont = document.getElementById("conclusionesFuertes");
+
+      if (!registros.length) {
+        cont.innerHTML = "<p>No hay resultados visibles para formular conclusiones.</p>";
+        return;
+      }
+
+      const mejor = registros[0];
+      const peor = registros[registros.length - 1];
+
+      const comunidadesCriticas = nbiRows
+        .filter(r => Number(r.pobreza_extrema_pct || 0) >= 30)
+        .map(r => r.comunidad);
+
+      const listaCriticas = Array.from(new Set(comunidadesCriticas));
+
+      cont.innerHTML = `
+        <ol>
+          <li><strong>Priorización territorial:</strong> ${mejor.sitio} presenta la mejor valoración comparativa y se perfila como el sitio con mejores condiciones relativas para una intervención inicial.</li>
+          <li><strong>Brechas de soporte:</strong> ${peor.sitio} evidencia la necesidad de fortalecer infraestructura y servicios antes de promover una inversión turística de mayor escala.</li>
+          <li><strong>Enfoque social:</strong> las comunidades vinculadas a los sitios evaluados presentan condiciones socioeconómicas que justifican una lectura integral de la inversión, combinando potencial turístico con brechas territoriales.</li>
+          <li><strong>Comunidades con mayor presión social:</strong> ${listaCriticas.length ? listaCriticas.join(", ") : "no se identificaron comunidades con pobreza extrema alta en la selección actual"}.</li>
+          <li><strong>Conclusión de política:</strong> se recomienda utilizar los resultados de esta comisión como insumo para priorizar intervenciones focalizadas, articulando mejora de condiciones habilitantes, accesibilidad y soporte territorial.</li>
+        </ol>
+      `;
+    }
+
     async function cargarDatosBase() {
       const res = await fetch(API, { cache: "no-store" });
       if (!res.ok) throw new Error("No se pudo leer la API");
@@ -1106,6 +1239,9 @@
         const registrosFiltrados = aplicarFiltros(cacheRegistros);
         const nbiFiltrado = filtrarNBI(registrosFiltrados);
 
+        ultimoEstado.registros = registrosFiltrados;
+        ultimoEstado.nbi = nbiFiltrado;
+
         renderMetricas(registrosFiltrados);
         renderResumen(registrosFiltrados);
         renderBarrasSitios(registrosFiltrados);
@@ -1114,6 +1250,8 @@
         renderMapa(registrosFiltrados);
         renderTablaNBI(nbiFiltrado);
         renderRecomendacion(registrosFiltrados, nbiFiltrado);
+        renderNarrativa(registrosFiltrados, nbiFiltrado);
+        renderConclusiones(registrosFiltrados, nbiFiltrado);
 
         estado.textContent = `Se visualizaron ${registrosFiltrados.length} registros de evaluación y ${nbiFiltrado.length} filas socioeconómicas según la segmentación aplicada.`;
       } catch (error) {
@@ -1128,6 +1266,85 @@
       document.getElementById("filtroNivel").value = "";
       poblarFiltros(cacheRegistros);
       cargarDashboard();
+    }
+
+    async function generarPDF() {
+      const { jsPDF } = window.jspdf;
+
+      if (mapa) {
+        mapa.invalidateSize();
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const margin = 10;
+      const pageWidth = 210;
+      const usableWidth = pageWidth - margin * 2;
+
+      const fechaHoy = new Date().toLocaleDateString("es-GT", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+
+      const filtroComunidad = document.getElementById("filtroComunidad").value || "Todas las comunidades";
+      const filtroSitio = document.getElementById("filtroSitio").value || "Todos los sitios";
+      const filtroNivel = document.getElementById("filtroNivel").value || "Todos los niveles";
+
+      const pdfTemplate = document.getElementById("pdfTemplate");
+      pdfTemplate.innerHTML = `
+        <div class="pdf-cover">
+          <h1>Informe Ejecutivo</h1>
+          <h2>Evaluación de Sitios Turísticos</h2>
+          <p><strong>Tipo de documento:</strong> Informe técnico de comisión</p>
+          <p><strong>Fecha de emisión:</strong> ${fechaHoy}</p>
+          <p><strong>Segmentación aplicada:</strong></p>
+          <p>• Comunidad: ${filtroComunidad}</p>
+          <p>• Sitio turístico: ${filtroSitio}</p>
+          <p>• Nivel de prioridad: ${filtroNivel}</p>
+          <p style="margin-top:24px;">
+            Este documento sintetiza resultados de evaluación territorial de sitios turísticos,
+            integrando análisis multicriterio y condiciones socioeconómicas de las comunidades asociadas.
+          </p>
+        </div>
+      `;
+
+      const elementos = [
+        pdfTemplate,
+        document.querySelector(".header"),
+        document.getElementById("metricas"),
+        document.querySelector(".grid"),
+        document.getElementById("narrativaAutomatica"),
+        document.getElementById("barrasCriterios"),
+        document.getElementById("tablaWrap"),
+        document.getElementById("tablaNBIWrap"),
+        document.getElementById("conclusionesFuertes")
+      ];
+
+      let y = 10;
+
+      for (const el of elementos) {
+        if (!el) continue;
+
+        const canvas = await html2canvas(el, {
+          scale: 2,
+          backgroundColor: "#ffffff"
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+        const imgWidth = usableWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        if (y + imgHeight > 285) {
+          pdf.addPage();
+          y = 10;
+        }
+
+        pdf.addImage(imgData, "PNG", margin, y, imgWidth, imgHeight);
+        y += imgHeight + 8;
+      }
+
+      pdf.save("Informe_Evaluacion_Sitios_Turisticos.pdf");
     }
 
     document.getElementById("filtroComunidad").addEventListener("change", () => {
