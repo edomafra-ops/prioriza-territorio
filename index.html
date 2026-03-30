@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evaluación de Sitios Turísticos - Informe de Comisión</title>
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     :root {
@@ -190,7 +189,7 @@
       border-radius: 12px;
       padding: 12px 14px;
       font-size: 14px;
-      line-height: 1.55;
+      line-height: 1.6;
       margin-bottom: 18px;
     }
 
@@ -393,6 +392,36 @@
       padding-left: 18px;
     }
 
+    .galeria-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .foto-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .foto-card img {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+      display: block;
+      background: #eef2f6;
+    }
+
+    .foto-caption {
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #49545c;
+      line-height: 1.4;
+      border-top: 1px solid var(--border);
+      background: #fbfdff;
+    }
+
     .pdf-hidden {
       position: absolute;
       left: -9999px;
@@ -404,7 +433,7 @@
     }
 
     .pdf-cover {
-      height: 1000px;
+      min-height: 980px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -436,16 +465,18 @@
       .grid { grid-template-columns: 1fr; }
       .filters { grid-template-columns: 1fr; }
       .bar-item { grid-template-columns: 1fr; }
+      .galeria-grid { grid-template-columns: repeat(2, 1fr); }
       #mapa { height: 360px; }
     }
 
     @media (max-width: 640px) {
       .metrics { grid-template-columns: 1fr; }
+      .galeria-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="container" id="dashboardRoot">
+  <div class="container">
 
     <div class="header">
       <h1>Evaluación de Sitios Turísticos</h1>
@@ -521,6 +552,12 @@
     </div>
 
     <div class="panel">
+      <h3>Evidencia fotográfica</h3>
+      <div id="galeriaFotos" class="galeria-grid"></div>
+      <div class="note">Las imágenes visibles responden a la selección actual de sitios en el dashboard.</div>
+    </div>
+
+    <div class="panel">
       <h3>Puntajes por criterio</h3>
       <div class="bar-list" id="barrasCriterios"></div>
       <div class="note">
@@ -551,9 +588,6 @@
   <div id="pdfTemplate" class="pdf-hidden"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
   <script>
     const API = "/api/resultados";
 
@@ -648,13 +682,35 @@
       }
     ];
 
+    const PHOTO_DATA = {
+      "Mirador vivero forestal": [
+        { src: "mirador.jpg", caption: "Vista panorámica del sitio y reconocimiento en campo." },
+        { src: "mirador_2.jpg", caption: "Inspección técnica de entorno y accesibilidad." },
+        { src: "mirador_3.jpg", caption: "Condiciones del área de visita y recorrido de comisión." }
+      ],
+      "Baños de agua tibia": [
+        { src: "baños.jpg", caption: "Acceso principal e imagen exterior del sitio." },
+        { src: "baños_2.jpg", caption: "Recorrido técnico con actores locales." },
+        { src: "baños_3.jpg", caption: "Verificación de infraestructura existente." },
+        { src: "baños_4.jpg", caption: "Espacios de uso público y soporte del servicio." },
+        { src: "baños_5.jpg", caption: "Condiciones operativas del atractivo." }
+      ],
+      "Cataratas de San Francisco": [
+        { src: "cataratas.jpg", caption: "Vista general del atractivo natural." },
+        { src: "cataratas_2.jpg", caption: "Aproximación y observación de acceso." },
+        { src: "cataratas_3.jpg", caption: "Reconocimiento de la ruta y entorno." },
+        { src: "cataratas_4.jpg", caption: "Evidencia del recorrido en zona de cascada." },
+        { src: "cataratas_5.jpg", caption: "Comisión técnica en inspección del área." },
+        { src: "cataratas_6.jpg", caption: "Observación territorial del paisaje y localización." },
+        { src: "cataratas_7.jpg", caption: "Validación en campo de condiciones del sitio." },
+        { src: "cataratas_8.jpg", caption: "Evidencia complementaria del atractivo y visita." }
+      ]
+    };
+
     let mapa = null;
     let capaMarcadores = null;
     let cacheRegistros = [];
-    let ultimoEstado = {
-      registros: [],
-      nbi: []
-    };
+    let ultimoEstado = { registros: [], nbi: [] };
 
     function normalizarTexto(texto) {
       return String(texto || "")
@@ -831,13 +887,8 @@
 
       let filas = [...NBI_DATA];
 
-      if (comunidad) {
-        filas = filas.filter(d => d.comunidad === comunidad);
-      }
-
-      if (sitio) {
-        filas = filas.filter(d => d.sitio_nombre === sitio);
-      }
+      if (comunidad) filas = filas.filter(d => d.comunidad === comunidad);
+      if (sitio) filas = filas.filter(d => d.sitio_nombre === sitio);
 
       const sitiosVisibles = new Set(registrosFiltrados.map(r => r.sitio));
       filas = filas.filter(d => sitiosVisibles.has(d.sitio_nombre));
@@ -1113,28 +1164,39 @@
       document.getElementById("tablaNBIWrap").innerHTML = html;
     }
 
-    function renderRecomendacion(registros, nbiRows) {
-      const rec = document.getElementById("recomendacion");
-
+    function buildRecommendation(registros, nbiRows) {
       if (!registros.length) {
-        rec.innerText = "No hay resultados visibles para generar una recomendación.";
-        return;
+        return "No hay resultados visibles para generar una recomendación.";
+      }
+
+      if (registros.length === 1) {
+        const sitio = registros[0];
+        const pobrezaProm = nbiRows.length
+          ? (nbiRows.reduce((acc, r) => acc + Number(r.pobreza_extrema_pct || 0), 0) / nbiRows.length).toFixed(1)
+          : "0.0";
+
+        if (sitio.nivel === "Alto") {
+          return `El sitio evaluado presenta una valoración alta (${sitio.promedio.toFixed(2)}), por lo que sí se recomienda su priorización inmediata como intervención territorial. La decisión puede reforzarse con acciones complementarias de gestión y promoción. El contexto socioeconómico asociado muestra ${pobrezaProm}% de pobreza extrema promedio, lo que aumenta la pertinencia de una intervención temprana.`;
+        }
+
+        if (sitio.nivel === "Medio") {
+          return `El sitio evaluado presenta una valoración media (${sitio.promedio.toFixed(2)}). Se recomienda considerarlo como opción de intervención condicionada, priorizando previamente mejoras habilitantes en infraestructura, accesibilidad y servicios. El contexto socioeconómico asociado muestra ${pobrezaProm}% de pobreza extrema promedio, por lo que una intervención gradual podría tener impacto territorial positivo.`;
+        }
+
+        return `El sitio evaluado presenta una valoración baja (${sitio.promedio.toFixed(2)}), por lo que no se recomienda su priorización inmediata como intervención principal. Previamente se requiere fortalecer condiciones de acceso, infraestructura y servicios para mejorar su viabilidad territorial. El contexto socioeconómico asociado registra ${pobrezaProm}% de pobreza extrema promedio, lo que sugiere que cualquier intervención futura deberá diseñarse con enfoque progresivo y soporte territorial previo.`;
       }
 
       const mejor = registros[0];
       const peor = registros[registros.length - 1];
-
       const pobrezaProm = nbiRows.length
         ? (nbiRows.reduce((acc, r) => acc + Number(r.pobreza_extrema_pct || 0), 0) / nbiRows.length).toFixed(1)
         : "0.0";
 
-      rec.innerText =
-        `Con base en la evaluación realizada, se recomienda priorizar intervenciones en ${mejor.sitio}, ` +
-        `por presentar el mayor potencial relativo (${mejor.promedio.toFixed(2)}). ` +
-        `Asimismo, ${peor.sitio} requiere acciones orientadas a mejorar condiciones de infraestructura y servicios ` +
-        `para fortalecer su viabilidad territorial. ` +
-        `Las comunidades asociadas a los sitios visibles presentan en promedio ${pobrezaProm}% de pobreza extrema, ` +
-        `lo cual refuerza la pertinencia de intervenciones integrales con enfoque territorial y socioeconómico.`;
+      return `Con base en la evaluación comparativa, se recomienda priorizar intervenciones en ${mejor.sitio}, por presentar el mayor potencial relativo (${mejor.promedio.toFixed(2)}). Asimismo, ${peor.sitio} requiere acciones orientadas a mejorar condiciones de infraestructura y servicios antes de ser considerado como prioridad inmediata. Las comunidades asociadas a los sitios visibles presentan en promedio ${pobrezaProm}% de pobreza extrema, lo cual refuerza la pertinencia de intervenciones integrales con enfoque territorial y socioeconómico.`;
+    }
+
+    function renderRecomendacion(registros, nbiRows) {
+      document.getElementById("recomendacion").innerText = buildRecommendation(registros, nbiRows);
     }
 
     function renderNarrativa(registros, nbiRows) {
@@ -1161,13 +1223,14 @@
         lecturaPrioridad = "un nivel bajo de aptitud territorial para inversión";
       }
 
+      if (registros.length === 1) {
+        cont.innerText =
+          `La selección actual concentra un único sitio evaluado: ${mejor.sitio}. Su valoración (${mejor.promedio.toFixed(2)}) permite interpretar ${lecturaPrioridad}. La lectura técnica debe centrarse en determinar si el sitio está en condiciones de ser impulsado de inmediato o si requiere fortalecimiento previo. Desde el punto de vista socioeconómico, las comunidades asociadas presentan en promedio ${pobrezaProm.toFixed(1)}% de pobreza extrema, por lo que cualquier decisión de inversión debe considerar tanto el potencial turístico como las brechas territoriales existentes.`;
+        return;
+      }
+
       cont.innerText =
-        `La comisión técnica evidencia ${lecturaPrioridad}, con un promedio general de ${promedioGeneral.toFixed(2)} ` +
-        `para los sitios actualmente visibles. ${mejor.sitio} concentra la mejor valoración relativa, mientras que ` +
-        `${peor.sitio} presenta mayores limitaciones para su aprovechamiento inmediato. ` +
-        `Desde el punto de vista socioeconómico, las comunidades asociadas muestran en promedio ${pobrezaProm.toFixed(1)}% ` +
-        `de pobreza extrema, lo que fortalece el argumento de priorizar intervenciones no solo por potencial turístico, ` +
-        `sino también por su capacidad de incidir en territorios con mayores brechas.`;
+        `La comisión técnica evidencia ${lecturaPrioridad}, con un promedio general de ${promedioGeneral.toFixed(2)} para los sitios actualmente visibles. ${mejor.sitio} concentra la mejor valoración relativa, mientras que ${peor.sitio} presenta mayores limitaciones para su aprovechamiento inmediato. Desde el punto de vista socioeconómico, las comunidades asociadas muestran en promedio ${pobrezaProm.toFixed(1)}% de pobreza extrema, lo que fortalece el argumento de priorizar intervenciones no solo por potencial turístico, sino también por su capacidad de incidir en territorios con mayores brechas.`;
     }
 
     function renderConclusiones(registros, nbiRows) {
@@ -1180,12 +1243,35 @@
 
       const mejor = registros[0];
       const peor = registros[registros.length - 1];
-
       const comunidadesCriticas = nbiRows
         .filter(r => Number(r.pobreza_extrema_pct || 0) >= 30)
         .map(r => r.comunidad);
 
       const listaCriticas = Array.from(new Set(comunidadesCriticas));
+
+      if (registros.length === 1) {
+        const sitio = registros[0];
+        let cierre = "";
+
+        if (sitio.nivel === "Alto") {
+          cierre = "El sitio presenta condiciones suficientes para impulsar una priorización inmediata.";
+        } else if (sitio.nivel === "Medio") {
+          cierre = "El sitio puede considerarse prioritario únicamente si se acompaña de mejoras habilitantes previas.";
+        } else {
+          cierre = "El sitio no reúne todavía condiciones suficientes para una priorización inmediata y requiere fortalecimiento previo.";
+        }
+
+        cont.innerHTML = `
+          <ol>
+            <li><strong>Resultado principal:</strong> la selección actual se concentra en ${sitio.sitio}, con una valoración de ${sitio.promedio.toFixed(2)} y nivel ${sitio.nivel.toLowerCase()}.</li>
+            <li><strong>Lectura de decisión:</strong> ${cierre}</li>
+            <li><strong>Dimensión social:</strong> el análisis socioeconómico asociado justifica mantener un enfoque territorial integral, articulando potencial turístico y brechas de bienestar.</li>
+            <li><strong>Comunidades con mayor presión social:</strong> ${listaCriticas.length ? listaCriticas.join(", ") : "no se identificaron comunidades con pobreza extrema alta en la selección actual"}.</li>
+            <li><strong>Conclusión ejecutiva:</strong> la decisión sobre este sitio debe condicionarse a su capacidad real de operar como destino, evitando priorizaciones automáticas cuando las condiciones habilitantes son insuficientes.</li>
+          </ol>
+        `;
+        return;
+      }
 
       cont.innerHTML = `
         <ol>
@@ -1196,6 +1282,45 @@
           <li><strong>Conclusión de política:</strong> se recomienda utilizar los resultados de esta comisión como insumo para priorizar intervenciones focalizadas, articulando mejora de condiciones habilitantes, accesibilidad y soporte territorial.</li>
         </ol>
       `;
+    }
+
+    function getVisiblePhotos(registros) {
+      const fotos = [];
+      const seen = new Set();
+
+      registros.forEach(r => {
+        const items = PHOTO_DATA[r.sitio] || [];
+        items.forEach(item => {
+          const key = `${r.sitio}-${item.src}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            fotos.push({
+              sitio: r.sitio,
+              src: item.src,
+              caption: item.caption
+            });
+          }
+        });
+      });
+
+      return fotos;
+    }
+
+    function renderGaleria(registros) {
+      const fotos = getVisiblePhotos(registros);
+      const cont = document.getElementById("galeriaFotos");
+
+      if (!fotos.length) {
+        cont.innerHTML = `<div class="nbi-empty">No hay evidencia fotográfica disponible para la selección actual.</div>`;
+        return;
+      }
+
+      cont.innerHTML = fotos.map(f => `
+        <div class="foto-card">
+          <img src="${f.src}" alt="${f.sitio}">
+          <div class="foto-caption"><strong>${f.sitio}:</strong> ${f.caption}</div>
+        </div>
+      `).join("");
     }
 
     async function cargarDatosBase() {
@@ -1252,6 +1377,7 @@
         renderRecomendacion(registrosFiltrados, nbiFiltrado);
         renderNarrativa(registrosFiltrados, nbiFiltrado);
         renderConclusiones(registrosFiltrados, nbiFiltrado);
+        renderGaleria(registrosFiltrados);
 
         estado.textContent = `Se visualizaron ${registrosFiltrados.length} registros de evaluación y ${nbiFiltrado.length} filas socioeconómicas según la segmentación aplicada.`;
       } catch (error) {
@@ -1304,7 +1430,7 @@
           <p>• Nivel de prioridad: ${filtroNivel}</p>
           <p style="margin-top:24px;">
             Este documento sintetiza resultados de evaluación territorial de sitios turísticos,
-            integrando análisis multicriterio y condiciones socioeconómicas de las comunidades asociadas.
+            integrando análisis comparativo, condiciones habilitantes, evidencia visual y contexto socioeconómico.
           </p>
         </div>
       `;
@@ -1315,6 +1441,7 @@
         document.getElementById("metricas"),
         document.querySelector(".grid"),
         document.getElementById("narrativaAutomatica"),
+        document.getElementById("galeriaFotos"),
         document.getElementById("barrasCriterios"),
         document.getElementById("tablaWrap"),
         document.getElementById("tablaNBIWrap"),
@@ -1328,7 +1455,8 @@
 
         const canvas = await html2canvas(el, {
           scale: 2,
-          backgroundColor: "#ffffff"
+          backgroundColor: "#ffffff",
+          useCORS: true
         });
 
         const imgData = canvas.toDataURL("image/png");
